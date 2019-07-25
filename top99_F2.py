@@ -7,9 +7,7 @@ def top(nelx, nely, volfrac, penal, rmin):
     loop = 0
     change = 1.0
 
-    fig, ax = plt.subplots()
-
-    while change > 0.04:
+    while change > 0.01:
         loop += 1
         xold = x
 
@@ -21,19 +19,19 @@ def top(nelx, nely, volfrac, penal, rmin):
             for ely in range(1, nely+1):
                 n1 = (nely + 1) * (elx - 1) + ely
                 n2 = (nely + 1) * elx + ely
-                edof = np.array([2 * n1 - 1, 2 * n1, 2 * n2 - 1, 2 * n2,
-                        2 * n2 + 1, 2 * n2 + 2, 2 * n1 + 1, 2 * n1 + 2]).T
-                Ue = U[edof-1, 0]
-                c = c + (x[ely-1, elx-1] ** penal)*Ue.conj().T.dot(KE.dot(Ue))
-                dc[ely-1, elx-1] = (-penal*x[ely-1, elx-1] ** (penal-1))*Ue.conj().T.dot(KE.dot(Ue))
+                dc[ely - 1, elx - 1] = 0
+                for i in range(2):
+                    edof = np.array([2 * n1 - 1, 2 * n1, 2 * n2 - 1, 2 * n2,
+                            2 * n2 + 1, 2 * n2 + 2, 2 * n1 + 1, 2 * n1 + 2]).T
+                    Ue = U[edof-1, i]
+                    c = c + (x[ely-1, elx-1] ** penal)*Ue.conj().T.dot(KE.dot(Ue))
+                    dc[ely-1, elx-1] = dc[ely-1, elx-1] - (penal*x[ely-1, elx-1] ** (penal-1))*Ue.conj().T.dot(KE.dot(Ue))
         dc = check(nelx, nely, rmin, x, dc)
         x = OC(nelx, nely, x, volfrac, dc)
         change = abs(x - xold).max()
         print(change)
-        ax.cla()
-        ax.imshow(x)
-        ax.set_title("frame {}".format(loop))
-        plt.pause(0.01)
+        plt.matshow(x)
+        plt.show()
 
 
 def OC(nelx, nely, x, volfrac, dc):
@@ -70,8 +68,8 @@ def check(nelx, nely, rmin, x, dc):
 def FE(nelx, nely, x, penal):
     KE = lk()
     K = np.zeros((2*(nelx+1)*(nely+1), 2*(nelx+1)*(nely+1)))
-    F = np.zeros((2*(nely+1)*(nelx+1), 1))
-    U = np.zeros((2 * (nely + 1) * (nelx + 1), 1))
+    F = np.zeros((2*(nely+1)*(nelx+1), 2))
+    U = np.zeros((2 * (nely + 1) * (nelx + 1), 2))
     for elx in range(1, nelx+1):
         for ely in range(1, nely+1):
             n1 = (nely + 1) * (elx - 1) + ely
@@ -80,15 +78,16 @@ def FE(nelx, nely, x, penal):
                     2 * n2 + 1, 2 * n2 + 2, 2 * n1 + 1, 2 * n1 + 2]).T
             K[np.ix_(edof-1, edof-1)] = K[np.ix_(edof-1, edof-1)] + x[ely-1, elx-1] ** penal * KE
 
-    F[1, 0] = -1.0
+    F[2*(nelx+1)*(nely+1)-1, 0] = -1.0
+    F[2*nelx*(nely+1)+1, 1] = 1.0
 
-    fixeddofs = np.array(list(set(range(1, 2 * (nely + 1)+1, 2)).union(set([2 * (nelx + 1) * (nely + 1)]))))
+    fixeddofs = np.array(range(2 * (nely + 1)))
     fixeddofs.sort()
-    alldofs = np.array(range(1, 2 * (nely + 1) * (nelx + 1)+1))
+    alldofs = np.array(range(2 * (nely + 1) * (nelx + 1)))
     freedofs = np.setdiff1d(alldofs, fixeddofs)
 
-    U[np.ix_(freedofs-1)] = np.linalg.solve(K[np.ix_(freedofs-1, freedofs-1)], F[np.ix_(freedofs-1)])
-    U[np.ix_(fixeddofs-1)] = np.zeros(U[np.ix_(fixeddofs-1)].shape)
+    U[np.ix_(freedofs)] = np.linalg.solve(K[np.ix_(freedofs, freedofs)], F[np.ix_(freedofs)])
+    U[np.ix_(fixeddofs)] = np.zeros(U[np.ix_(fixeddofs)].shape)
     return U
 
 
@@ -111,5 +110,4 @@ def lk():
 
 
 if __name__ == '__main__':
-    top(60, 20, 0.5, 3.0, 1.5)
-    input('finished! enter any key to exit')
+    top(30, 30, 0.4, 3.0, 1.2)
