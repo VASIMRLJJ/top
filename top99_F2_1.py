@@ -82,7 +82,6 @@ def FE(nelx, nely, x, penal):
     F[2*nelx*(nely+1)+1, 1] = 1.0
 
     fixeddofs = np.array([2*(nelx+1)*(nely+1)-1])
-    fixeddofs.sort()
     alldofs = np.array(range(2 * (nely + 1) * (nelx + 1)))
     freedofs = np.setdiff1d(alldofs, fixeddofs)
 
