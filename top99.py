@@ -7,8 +7,6 @@ def top(nelx, nely, volfrac, penal, rmin):
     loop = 0
     change = 1.0
 
-    fig, ax = plt.subplots()
-
     while change > 0.04:
         loop += 1
         xold = x
@@ -30,10 +28,8 @@ def top(nelx, nely, volfrac, penal, rmin):
         x = OC(nelx, nely, x, volfrac, dc)
         change = abs(x - xold).max()
         print(change)
-        ax.cla()
-        ax.imshow(x)
-        ax.set_title("frame {}".format(loop))
-        plt.pause(0.01)
+        plt.matshow(x)
+        plt.show()
 
 
 def OC(nelx, nely, x, volfrac, dc):
@@ -82,13 +78,13 @@ def FE(nelx, nely, x, penal):
 
     F[1, 0] = -1.0
 
-    fixeddofs = np.array(list(set(range(1, 2 * (nely + 1)+1, 2)).union(set([2 * (nelx + 1) * (nely + 1)]))))
+    fixeddofs = np.array(list(set(range(0, 2 * (nely + 1), 2)).union(set([2 * (nelx + 1) * (nely + 1)-1]))))
     fixeddofs.sort()
-    alldofs = np.array(range(1, 2 * (nely + 1) * (nelx + 1)+1))
+    alldofs = np.array(range(2 * (nely + 1) * (nelx + 1)))
     freedofs = np.setdiff1d(alldofs, fixeddofs)
 
-    U[np.ix_(freedofs-1)] = np.linalg.solve(K[np.ix_(freedofs-1, freedofs-1)], F[np.ix_(freedofs-1)])
-    U[np.ix_(fixeddofs-1)] = np.zeros(U[np.ix_(fixeddofs-1)].shape)
+    U[np.ix_(freedofs)] = np.linalg.solve(K[np.ix_(freedofs, freedofs)], F[np.ix_(freedofs)])
+    U[np.ix_(fixeddofs)] = np.zeros(U[np.ix_(fixeddofs)].shape)
     return U
 
 
@@ -112,4 +108,3 @@ def lk():
 
 if __name__ == '__main__':
     top(60, 20, 0.5, 3.0, 1.5)
-    input('finished! enter any key to exit')
