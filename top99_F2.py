@@ -6,8 +6,9 @@ def top(nelx, nely, volfrac, penal, rmin):
     x = np.full((nely, nelx), volfrac)
     loop = 0
     change = 1.0
+    changelog = []
 
-    while change > 0.01:
+    while change > 0.02:
         loop += 1
         xold = x
 
@@ -27,11 +28,16 @@ def top(nelx, nely, volfrac, penal, rmin):
                     c = c + (x[ely-1, elx-1] ** penal)*Ue.conj().T.dot(KE.dot(Ue))
                     dc[ely-1, elx-1] = dc[ely-1, elx-1] - (penal*x[ely-1, elx-1] ** (penal-1))*Ue.conj().T.dot(KE.dot(Ue))
         dc = check(nelx, nely, rmin, x, dc)
+        # plt.matshow(dc)
+        # plt.show()
         x = OC(nelx, nely, x, volfrac, dc)
         change = abs(x - xold).max()
+        changelog.append(change)
         print(change)
         plt.matshow(x)
         plt.show()
+    plt.plot(changelog)
+    plt.show()
 
 
 def OC(nelx, nely, x, volfrac, dc):
@@ -79,7 +85,7 @@ def FE(nelx, nely, x, penal):
             K[np.ix_(edof-1, edof-1)] = K[np.ix_(edof-1, edof-1)] + x[ely-1, elx-1] ** penal * KE
 
     F[2*(nelx+1)*(nely+1)-1, 0] = -1.0
-    F[2*nelx*(nely+1)+1, 1] = 1.0
+    F[2*nelx*(nely+1)+1, 0] = 1.0
 
     fixeddofs = np.array(range(2 * (nely + 1)))
     alldofs = np.array(range(2 * (nely + 1) * (nelx + 1)))
@@ -87,6 +93,12 @@ def FE(nelx, nely, x, penal):
 
     U[np.ix_(freedofs)] = np.linalg.solve(K[np.ix_(freedofs, freedofs)], F[np.ix_(freedofs)])
     U[np.ix_(fixeddofs)] = np.zeros(U[np.ix_(fixeddofs)].shape)
+    # plt.plot(U.T[0].T)
+    # plt.show()
+    # plt.plot(U.T[1].T)
+    # plt.show()
+    # plt.plot(U.T[1].T+U.T[0].T)
+    # plt.show()
     return U
 
 

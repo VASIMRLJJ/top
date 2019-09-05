@@ -6,8 +6,9 @@ def top(nelx, nely, volfrac, penal, rmin):
     x = np.full((nely, nelx), volfrac)
     loop = 0
     change = 1.0
+    changelog = []
 
-    while change > 0.04:
+    while change > 0.02:
         loop += 1
         xold = x
 
@@ -28,8 +29,10 @@ def top(nelx, nely, volfrac, penal, rmin):
         x = OC(nelx, nely, x, volfrac, dc)
         change = abs(x - xold).max()
         print(change)
+        changelog.append(change)
         plt.matshow(x)
         plt.show()
+    return changelog
 
 
 def OC(nelx, nely, x, volfrac, dc):
@@ -106,4 +109,6 @@ def lk():
 
 
 if __name__ == '__main__':
-    top(60, 20, 0.5, 3.0, 1.5)
+    log = top(60, 20, 0.5, 3.0, 1.5)
+    plt.plot(log)
+    plt.show()
