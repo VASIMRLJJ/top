@@ -1,3 +1,4 @@
+# A little script to convert 3d numpy array to vtk XML rectilinear grid file (.vtr) for post processing in Paraview.
 import numpy as np
 import vtkmodules.all as vtk
 
